@@ -1,307 +1,81 @@
-// Initial game state variables
-let playerName = '';
-let playerGender = '';
-let playerCareer = '';
-let cash = 1000; // Starting cash
-let energy = 100; // Full energy to start
-let week = 1;
-let firstCareerBoost = 1.05; // Boost for the first career selected
-let properties = 0; // Number of properties owned
-let companyInvestments = 0; // Number of companies invested in
-let characterTraits = { singing: 0, acting: 0, charisma: 0 }; // Character trait levels
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Influencer Movie Star Sim</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="top-bar">
+            <div class="currency">Cash: $1000</div>
+            <div class="energy">Energy: 100/100</div>
+            <div class="week">Week 1, 2024</div>
+            <button id="nextWeekBtn">Next Week</button>
+        </div>
+    </header>
 
-// DOM Elements
-const currencyElement = document.querySelector('.currency');
-const energyElement = document.querySelector('.energy');
-const weekElement = document.querySelector('.week');
-const nextWeekBtn = document.getElementById('nextWeekBtn');
-const popupStart = document.getElementById('popupStart');
-const careerDetails = document.getElementById('careerDetails');
-const characterDetails = document.getElementById('characterDetails');
-const companyDetails = document.getElementById('companyDetails');
-const homeDetails = document.getElementById('homeDetails');
+    <main>
+        <!-- Character Creation Popup -->
+        <section id="popupStart" class="popup active">
+            <h2>Create Your Character</h2>
+            <input type="text" placeholder="Enter Name" id="playerName">
+            <select id="genderSelect">
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+            </select>
+            <h3>Select First Career (Boosts +5%)</h3>
+            <button onclick="selectFirstCareer('singing')">Singing</button>
+            <button onclick="selectFirstCareer('acting')">Acting</button>
+            <button onclick="createCharacter()">Create Character</button>
+        </section>
 
-// Start the game and initialize player info
-function startGame(name, gender, career) {
-    playerName = name;
-    playerGender = gender;
-    playerCareer = career;
-    firstCareerBoost = 1.05; // Apply the career boost
-    
-    popupStart.classList.remove('active');
-    updateStats();
-    openTab('careers'); // Open Careers tab once game starts
-}
+        <!-- Tabs for navigation -->
+        <div class="tabs">
+            <button class="tab-button" onclick="openTab('careers')">Careers</button>
+            <button class="tab-button" onclick="openTab('companies')">Companies</button>
+            <button class="tab-button" onclick="openTab('character')">Character</button>
+            <button class="tab-button" onclick="openTab('home')">Home</button>
+        </div>
 
-// Update the stats (cash, energy, week)
-function updateStats() {
-    currencyElement.textContent = `Cash: $${cash}`;
-    energyElement.textContent = `Energy: ${energy}/100`;
-    weekElement.textContent = `Week ${week}, 2024`;
-}
+        <!-- Career Tab -->
+        <section id="careers" class="tab-content">
+            <h2>Careers</h2>
+            <button class="sub-btn" onclick="showMusicCareer()">Music Career</button>
+            <button class="sub-btn" onclick="showMovieCareer()">Movie Career</button>
+            <button class="sub-btn" onclick="showInfluencerCareer()">Influencer & Other Careers</button>
+            <div id="careerDetails"></div>
+        </section>
 
-// Select first career and apply 5% boost
-function selectFirstCareer(career) {
-    startGame(document.getElementById('playerName').value, document.getElementById('genderSelect').value, career);
-}
+        <!-- Companies Tab -->
+        <section id="companies" class="tab-content hidden">
+            <h2>Companies</h2>
+            <button class="sub-btn" onclick="startNewCompany()">Start New Company</button>
+            <button class="sub-btn" onclick="viewEmpire()">Empire Overview</button>
+            <div id="companyDetails"></div>
+        </section>
 
-// Go to the next week
-nextWeekBtn.addEventListener('click', function() {
-    if (energy < 10) {
-        alert('Not enough energy to progress to the next week!');
-        return;
-    }
-    
-    energy -= 10; // Deduct energy for progressing to next week
-    week++;
-    
-    // Random income per week (could depend on career or level)
-    cash += Math.floor(Math.random() * 500) + 100; // Cash range 100-600 per week
-    
-    updateStats(); // Update UI stats
-});
+        <!-- Character Tab -->
+        <section id="character" class="tab-content hidden">
+            <h2>Character</h2>
+            <button class="sub-btn" onclick="levelTraits()">Level Traits</button>
+            <button class="sub-btn" onclick="takeLessons()">Take Lessons</button>
+            <div id="characterDetails"></div>
+        </section>
 
-// Tab switching
-function openTab(tabId) {
-    const tabs = document.querySelectorAll('.tab-content');
-    tabs.forEach(tab => tab.classList.remove('active'));
-    const activeTab = document.getElementById(tabId);
-    activeTab.classList.add('active');
-}
+        <!-- Home Tab -->
+        <section id="home" class="tab-content hidden">
+            <h2>Home</h2>
+            <button class="sub-btn" onclick="findJob()">Find a Job</button>
+            <button class="sub-btn" onclick="viewProperties()">Properties</button>
+            <button class="sub-btn" onclick="viewSecurity()">Security Options</button>
+            <button class="sub-btn" onclick="viewMediaStats()">Charts & Media Stats</button>
+            <button class="sub-btn" onclick="viewAwards()">Awards & Events</button>
+            <div id="homeDetails"></div>
+        </section>
+    </main>
 
-// Career-related actions
-function showMusicCareer() {
-    careerDetails.innerHTML = `
-        <h3>Music Career</h3>
-        <p>Boost your popularity and earn money by producing songs!</p>
-        <button onclick="earnCash(300)">Record a Song (+$300)</button>
-        <button onclick="buyMusicEquipment()">Buy Music Equipment (+$500)</button>
-        <button onclick="collaborateWithArtist()">Collaborate with Artist (+$1000)</button>
-    `;
-}
-
-function earnCash(amount) {
-    if (energy >= 10) { // Ensure the player has enough energy to work
-        cash += amount;
-        energy -= 10; // Deduct 10 energy for performing an action
-        updateStats();
-    } else {
-        alert('Not enough energy to perform this action!');
-    }
-}
-
-function buyMusicEquipment() {
-    if (cash >= 500) {
-        cash -= 500;
-        updateStats();
-        alert('You bought music equipment to help improve your music production!');
-    } else {
-        alert('You need more money to buy music equipment.');
-    }
-}
-
-function collaborateWithArtist() {
-    if (cash >= 1000) {
-        cash -= 1000;
-        updateStats();
-        alert('You collaborated with a famous artist! Your popularity increases!');
-    } else {
-        alert('You need more money to collaborate with an artist.');
-    }
-}
-
-function showMovieCareer() {
-    careerDetails.innerHTML = `
-        <h3>Movie Career</h3>
-        <p>Become a star in movies and earn through blockbuster hits!</p>
-        <button onclick="shootMovie()">Shoot a Movie (+$500)</button>
-        <button onclick="hireDirector()">Hire a Director (+$1500)</button>
-        <button onclick="getMovieRole()">Get a Movie Role (+$1000)</button>
-    `;
-}
-
-function shootMovie() {
-    if (energy >= 10) {
-        cash += 500;
-        energy -= 10;
-        updateStats();
-        alert('You shot a blockbuster movie! Earnings have been added.');
-    } else {
-        alert('Not enough energy to shoot a movie!');
-    }
-}
-
-function hireDirector() {
-    if (cash >= 1500) {
-        cash -= 1500;
-        updateStats();
-        alert('You hired a director for your movie!');
-    } else {
-        alert('You need more money to hire a director.');
-    }
-}
-
-function getMovieRole() {
-    if (energy >= 10) {
-        cash += 1000;
-        energy -= 10;
-        updateStats();
-        alert('You secured a movie role! Earnings have been added.');
-    } else {
-        alert('Not enough energy to get a movie role!');
-    }
-}
-
-function showInfluencerCareer() {
-    careerDetails.innerHTML = `
-        <h3>Influencer Career</h3>
-        <p>Increase your social media presence and earn sponsorship deals!</p>
-        <button onclick="postOnSocialMedia()">Post on Social Media (+$200)</button>
-        <button onclick="attendEvent()">Attend Event (+$500)</button>
-        <button onclick="sponsorDeal()">Sign Sponsorship Deal (+$2000)</button>
-    `;
-}
-
-function postOnSocialMedia() {
-    if (energy >= 10) {
-        cash += 200;
-        energy -= 10;
-        updateStats();
-        alert('You posted on social media! Gained some followers and money.');
-    } else {
-        alert('Not enough energy to post on social media!');
-    }
-}
-
-function attendEvent() {
-    if (energy >= 10) {
-        cash += 500;
-        energy -= 10;
-        updateStats();
-        alert('You attended an event! Your fame increases!');
-    } else {
-        alert('Not enough energy to attend the event!');
-    }
-}
-
-function sponsorDeal() {
-    if (cash >= 2000) {
-        cash -= 2000;
-        updateStats();
-        alert('You signed a sponsorship deal! Huge income boost!');
-    } else {
-        alert('You need more money to sign this deal!');
-    }
-}
-
-// Start a new company
-function startNewCompany() {
-    companyDetails.innerHTML = `
-        <h3>Start a New Company</h3>
-        <p>Invest your money into starting a new business!</p>
-        <button onclick="investInCompany()">Invest in Company (+$1000)</button>
-    `;
-}
-
-function investInCompany() {
-    if (cash >= 1000) {
-        cash -= 1000;
-        companyInvestments += 1;
-        updateStats();
-        alert('You have successfully invested in a new company!');
-    } else {
-        alert('You need more money to start a company.');
-    }
-}
-
-// View empire overview
-function viewEmpire() {
-    companyDetails.innerHTML = `
-        <h3>Your Empire Overview</h3>
-        <p>You have invested in ${companyInvestments} companies.</p>
-    `;
-}
-
-// Level up character traits
-function levelTraits() {
-    characterDetails.innerHTML = `
-        <h3>Level Traits</h3>
-        <p>Boost your character traits to increase performance!</p>
-        <button onclick="levelUpTrait('singing')">Level Up Singing (+$500)</button>
-        <button onclick="levelUpTrait('acting')">Level Up Acting (+$500)</button>
-        <button onclick="levelUpTrait('charisma')">Level Up Charisma (+$500)</button>
-    `;
-}
-
-function levelUpTrait(trait) {
-    if (cash >= 500) {
-        cash -= 500;
-        characterTraits[trait] += 1;
-        updateStats();
-        alert(`${trait} leveled up!`);
-    } else {
-        alert('You need more money to level up your traits.');
-    }
-}
-
-// Take lessons to improve skills
-function takeLessons() {
-    characterDetails.innerHTML = `
-        <h3>Take Lessons</h3>
-        <p>Improve your skills and increase career progression.</p>
-        <button onclick="takeMusicLessons()">Take Music Lessons (+$300)</button>
-        <button onclick="takeActingLessons()">Take Acting Lessons (+$400)</button>
-    `;
-}
-
-function takeMusicLessons() {
-    if (cash >= 300) {
-        cash -= 300;
-        updateStats();
-        alert('Music skills improved!');
-    } else {
-        alert('You need more money to take lessons.');
-    }
-}
-
-function takeActingLessons() {
-    if (cash >= 400) {
-        cash -= 400;
-        updateStats();
-        alert('Acting skills improved!');
-    } else {
-        alert('You need more money to take lessons.');
-    }
-}
-
-// Find a job in the Home section
-function findJob() {
-    homeDetails.innerHTML = `
-        <h3>Find a Job</h3>
-        <p>Search for new opportunities to earn money!</p>
-        <button onclick="earnCash(100)">Apply for a Job (+$100)</button>
-    `;
-}
-
-// View properties in the Home section
-function viewProperties() {
-    homeDetails.innerHTML = `
-        <h3>Your Properties</h3>
-        <p>You own ${properties} properties.</p>
-        <button onclick="buyProperty()">Buy Property (+$1500)</button>
-    `;
-}
-
-function buyProperty() {
-    if (cash >= 1500) {
-        cash -= 1500;
-        properties += 1;
-        updateStats();
-        alert('You bought a property! It will generate passive income.');
-    } else {
-        alert('You need more money to buy a property.');
-    }
-}
-
-// View security options in the Home section
-function viewSecurity()
+    <script src="script.js"></script>
+</body>
+</html>
